@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 func Unmarshal(out interface{}) error {
@@ -63,6 +64,14 @@ func unmarshal(val reflect.Value) error {
 			fieldVal.SetBool(boolValue)
 
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			if fieldVal.Type().String() == "time.Duration" {
+				duration, err := time.ParseDuration(envVal)
+				if err != nil {
+					return errors.New("Invalid time.Duration for env '" + tag + "': " + envVal)
+				}
+				envVal = strconv.FormatInt(int64(duration), 10)
+			}
+
 			intValue, err := strconv.ParseInt(envVal, 0, fieldVal.Type().Bits())
 			if err != nil {
 				return errors.New("Invalid integer for env '" + tag + "': " + envVal)
