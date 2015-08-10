@@ -5,7 +5,16 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
+
+var (
+	timeDuration reflect.Type
+)
+
+func init() {
+	timeDuration = reflect.TypeOf((*time.Duration)(nil)).Elem()
+}
 
 func Unmarshal(out interface{}) error {
 	val := reflect.ValueOf(out)
@@ -50,41 +59,51 @@ func unmarshal(val reflect.Value) error {
 			continue
 		}
 
-		switch fieldVal.Kind() {
-
-		case reflect.String:
-			fieldVal.SetString(envVal)
-
-		case reflect.Bool:
-			boolValue, err := strconv.ParseBool(envVal)
+		switch fieldVal.Type() {
+		case timeDuration:
+			duration, err := time.ParseDuration(envVal)
 			if err != nil {
-				return errors.New("Invalid boolean for env '" + tag + "': " + envVal)
+				return errors.New("Invalid time.Duration for env '" + tag + "': " + envVal + " (" + err.Error() + ")")
 			}
-			fieldVal.SetBool(boolValue)
-
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			intValue, err := strconv.ParseInt(envVal, 0, fieldVal.Type().Bits())
-			if err != nil {
-				return errors.New("Invalid integer for env '" + tag + "': " + envVal)
-			}
-			fieldVal.SetInt(intValue)
-
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			uintValue, err := strconv.ParseUint(envVal, 0, fieldVal.Type().Bits())
-			if err != nil {
-				return errors.New("Invalid unsigned integer for env '" + tag + "': " + envVal)
-			}
-			fieldVal.SetUint(uintValue)
-
-		case reflect.Float32, reflect.Float64:
-			floatValue, err := strconv.ParseFloat(envVal, fieldVal.Type().Bits())
-			if err != nil {
-				return errors.New("Invalid float for env '" + tag + "': " + envVal)
-			}
-			fieldVal.SetFloat(floatValue)
+			fieldVal.SetInt(duration.Nanoseconds())
 
 		default:
-			return errors.New("Unsupported type '" + fieldVal.Kind().String() + "': " + field.Name)
+			switch fieldVal.Kind() {
+
+			case reflect.String:
+				fieldVal.SetString(envVal)
+
+			case reflect.Bool:
+				boolValue, err := strconv.ParseBool(envVal)
+				if err != nil {
+					return errors.New("Invalid boolean for env '" + tag + "': " + envVal)
+				}
+				fieldVal.SetBool(boolValue)
+
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				intValue, err := strconv.ParseInt(envVal, 0, fieldVal.Type().Bits())
+				if err != nil {
+					return errors.New("Invalid integer for env '" + tag + "': " + envVal)
+				}
+				fieldVal.SetInt(intValue)
+
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				uintValue, err := strconv.ParseUint(envVal, 0, fieldVal.Type().Bits())
+				if err != nil {
+					return errors.New("Invalid unsigned integer for env '" + tag + "': " + envVal)
+				}
+				fieldVal.SetUint(uintValue)
+
+			case reflect.Float32, reflect.Float64:
+				floatValue, err := strconv.ParseFloat(envVal, fieldVal.Type().Bits())
+				if err != nil {
+					return errors.New("Invalid float for env '" + tag + "': " + envVal)
+				}
+				fieldVal.SetFloat(floatValue)
+
+			default:
+				return errors.New("Unsupported type '" + fieldVal.Kind().String() + "': " + field.Name)
+			}
 		}
 	}
 

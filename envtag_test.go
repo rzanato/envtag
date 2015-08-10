@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -29,31 +30,32 @@ func TestSimple(t *testing.T) {
 
 func TestTypes(t *testing.T) {
 	type TestStruct struct {
-		StringSimple string  `env:"TEST_STRING_SIMPLE"`
-		StringEmpty  string  `env:"TEST_STRING_EMPTY"`
-		BoolTrue     bool    `env:"TEST_BOOL_TRUE"`
-		BoolFalse    bool    `env:"TEST_BOOL_FALSE"`
-		BoolZero     bool    `env:"TEST_BOOL_ZERO"`
-		BoolOne      bool    `env:"TEST_BOOL_ONE"`
-		IntMax       int     `env:"TEST_INT_MAX"`
-		IntMin       int     `env:"TEST_INT_MIN"`
-		IntMax8      int8    `env:"TEST_INT_MAX8"`
-		IntMin8      int8    `env:"TEST_INT_MIN8"`
-		IntMax16     int16   `env:"TEST_INT_MAX16"`
-		IntMin16     int16   `env:"TEST_INT_MIN16"`
-		IntMax32     int32   `env:"TEST_INT_MAX32"`
-		IntMin32     int32   `env:"TEST_INT_MIN32"`
-		IntMax64     int64   `env:"TEST_INT_MAX64"`
-		IntMin64     int64   `env:"TEST_INT_MIN64"`
-		UintMax      uint    `env:"TEST_UINT_MAX"`
-		UintMax8     uint8   `env:"TEST_UINT_MAX8"`
-		UintMax16    uint16  `env:"TEST_UINT_MAX16"`
-		UintMax32    uint32  `env:"TEST_UINT_MAX32"`
-		UintMax64    uint64  `env:"TEST_UINT_MAX64"`
-		FloatMax32   float32 `env:"TEST_FLOAT_MAX32"`
-		FloatMin32   float32 `env:"TEST_FLOAT_MIN32"`
-		FloatMax64   float64 `env:"TEST_FLOAT_MAX64"`
-		FloatMin64   float64 `env:"TEST_FLOAT_MIN64"`
+		StringSimple string        `env:"TEST_STRING_SIMPLE"`
+		StringEmpty  string        `env:"TEST_STRING_EMPTY"`
+		BoolTrue     bool          `env:"TEST_BOOL_TRUE"`
+		BoolFalse    bool          `env:"TEST_BOOL_FALSE"`
+		BoolZero     bool          `env:"TEST_BOOL_ZERO"`
+		BoolOne      bool          `env:"TEST_BOOL_ONE"`
+		IntMax       int           `env:"TEST_INT_MAX"`
+		IntMin       int           `env:"TEST_INT_MIN"`
+		IntMax8      int8          `env:"TEST_INT_MAX8"`
+		IntMin8      int8          `env:"TEST_INT_MIN8"`
+		IntMax16     int16         `env:"TEST_INT_MAX16"`
+		IntMin16     int16         `env:"TEST_INT_MIN16"`
+		IntMax32     int32         `env:"TEST_INT_MAX32"`
+		IntMin32     int32         `env:"TEST_INT_MIN32"`
+		IntMax64     int64         `env:"TEST_INT_MAX64"`
+		IntMin64     int64         `env:"TEST_INT_MIN64"`
+		UintMax      uint          `env:"TEST_UINT_MAX"`
+		UintMax8     uint8         `env:"TEST_UINT_MAX8"`
+		UintMax16    uint16        `env:"TEST_UINT_MAX16"`
+		UintMax32    uint32        `env:"TEST_UINT_MAX32"`
+		UintMax64    uint64        `env:"TEST_UINT_MAX64"`
+		FloatMax32   float32       `env:"TEST_FLOAT_MAX32"`
+		FloatMin32   float32       `env:"TEST_FLOAT_MIN32"`
+		FloatMax64   float64       `env:"TEST_FLOAT_MAX64"`
+		FloatMin64   float64       `env:"TEST_FLOAT_MIN64"`
+		Duration     time.Duration `env:"TEST_DURATION"`
 	}
 
 	testStruct := TestStruct{}
@@ -84,6 +86,7 @@ func TestTypes(t *testing.T) {
 		"TEST_FLOAT_MIN32":   strconv.FormatFloat(float64(math.SmallestNonzeroFloat32), 'f', -1, 32),
 		"TEST_FLOAT_MAX64":   strconv.FormatFloat(math.MaxFloat64, 'f', -1, 64),
 		"TEST_FLOAT_MIN64":   strconv.FormatFloat(math.SmallestNonzeroFloat64, 'f', -1, 64),
+		"TEST_DURATION":      "-2h3m4s5ms6us7ns",
 	}
 
 	for k, v := range testValues {
@@ -150,6 +153,10 @@ func TestTypes(t *testing.T) {
 
 	if testStruct.FloatMax64 != math.MaxFloat64 || testStruct.FloatMin64 != math.SmallestNonzeroFloat64 {
 		t.Error("Float64 type failed")
+	}
+
+	if testStruct.Duration.Nanoseconds() != -7384005006007 {
+		t.Error("time.Duration type failed")
 	}
 }
 
