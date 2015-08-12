@@ -68,6 +68,7 @@ func unmarshal(val reflect.Value) error {
 			if err != nil {
 				return errors.New(err.Error() + " for env '" + tag + "': " + envVal)
 			}
+
 		} else {
 			switch fieldVal.Kind() {
 
