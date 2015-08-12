@@ -9,11 +9,15 @@ import (
 )
 
 var (
-	timeDuration reflect.Type
+	handlers   map[reflect.Type]func(reflect.Value, string) error
+	timeFormat string = ""
 )
 
 func init() {
-	timeDuration = reflect.TypeOf((*time.Duration)(nil)).Elem()
+	handlers = map[reflect.Type]func(reflect.Value, string) error{
+		reflect.TypeOf((*time.Duration)(nil)).Elem(): handleDuration,
+		reflect.TypeOf((*time.Time)(nil)).Elem():     handleTime,
+	}
 }
 
 func Unmarshal(out interface{}) error {
@@ -59,15 +63,12 @@ func unmarshal(val reflect.Value) error {
 			continue
 		}
 
-		switch fieldVal.Type() {
-		case timeDuration:
-			duration, err := time.ParseDuration(envVal)
+		if handler, ok := handlers[fieldVal.Type()]; ok {
+			err := handler(fieldVal, envVal)
 			if err != nil {
-				return errors.New("Invalid time.Duration for env '" + tag + "': " + envVal + " (" + err.Error() + ")")
+				return errors.New(err.Error() + " for env '" + tag + "': " + envVal)
 			}
-			fieldVal.SetInt(duration.Nanoseconds())
-
-		default:
+		} else {
 			switch fieldVal.Kind() {
 
 			case reflect.String:
@@ -106,6 +107,34 @@ func unmarshal(val reflect.Value) error {
 			}
 		}
 	}
+	return nil
+}
+
+func handleDuration(fieldVal reflect.Value, envVal string) error {
+	duration, err := time.ParseDuration(envVal)
+	if err != nil {
+		return errors.New("Invalid time.Duration (" + err.Error() + ")")
+	}
+
+	fieldVal.SetInt(duration.Nanoseconds())
+	return nil
+}
+
+func SetTimeFormat(format string) {
+	timeFormat = format
+}
+
+func handleTime(fieldVal reflect.Value, envVal string) error {
+	if timeFormat == "" {
+		return errors.New("time format not provided (envtag.SetTimeFormat)")
+	}
+
+	time, err := time.Parse(timeFormat, envVal)
+	if err != nil {
+		return errors.New("Invalid time.Time (" + err.Error() + ")")
+	}
+
+	fieldVal.Set(reflect.ValueOf(time))
 
 	return nil
 }

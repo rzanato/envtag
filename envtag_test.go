@@ -56,6 +56,7 @@ func TestTypes(t *testing.T) {
 		FloatMax64   float64       `env:"TEST_FLOAT_MAX64"`
 		FloatMin64   float64       `env:"TEST_FLOAT_MIN64"`
 		Duration     time.Duration `env:"TEST_DURATION"`
+		Time         time.Time     `env:"TEST_TIME"`
 	}
 
 	testStruct := TestStruct{}
@@ -87,11 +88,14 @@ func TestTypes(t *testing.T) {
 		"TEST_FLOAT_MAX64":   strconv.FormatFloat(math.MaxFloat64, 'f', -1, 64),
 		"TEST_FLOAT_MIN64":   strconv.FormatFloat(math.SmallestNonzeroFloat64, 'f', -1, 64),
 		"TEST_DURATION":      "-2h3m4s5ms6us7ns",
+		"TEST_TIME":          "Feb 3, 2013 at 7:54pm (PST)",
 	}
 
 	for k, v := range testValues {
 		os.Setenv(k, v)
 	}
+
+	SetTimeFormat("Jan 2, 2006 at 3:04pm (MST)")
 
 	err := Unmarshal(&testStruct)
 
@@ -157,6 +161,10 @@ func TestTypes(t *testing.T) {
 
 	if testStruct.Duration.Nanoseconds() != -7384005006007 {
 		t.Error("time.Duration type failed")
+	}
+
+	if testStruct.Time.UnixNano() != -6795364578871345152 {
+		t.Error("time.Time type failed")
 	}
 }
 
